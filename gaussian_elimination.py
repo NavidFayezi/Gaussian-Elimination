@@ -30,24 +30,46 @@ def partial_pivoting(matrix, col):
 
 
 def gaussian_elimination_partial_pivoting(matrix):
-    matrix_size = len(matrix)                   # matrix_size == number of rows.
-    # forward elimination
-    for col in range(matrix_size-1):
-        partial_pivoting(matrix, col)
-        for row in range(col+1, matrix_size):
-            multiple = -1 * (matrix[row][col] / matrix[col][col])
-            matrix[row][col] = 0                    # explicitly assign zero to this element to avoid numerical errors.
-            for k in range(col+1, matrix_size+1):                   # increase the range by 1 to include the load.
-                matrix[row][k] += multiple * matrix[col][k]
-    # backward substitution
-    answer = [0.0 for x in range(matrix_size)]
-    answer[matrix_size-1] = matrix[matrix_size-1][matrix_size] / matrix[matrix_size-1][matrix_size-1]
-    for i in range(matrix_size-2, -1, -1):
-        sigma = 0.0
-        for j in range(i+1, matrix_size):
-            sigma += matrix[i][j] * answer[j]
-        answer[i] = (matrix[i][-1] - sigma) / matrix[i][i]
-    return answer
+    assert len(matrix) == (len(matrix[0]) - 1)                  # check the size of augmented matrix.
+    try:
+        matrix_size = len(matrix)                   # matrix_size == number of rows.
+        # forward elimination
+        for col in range(matrix_size-1):
+            partial_pivoting(matrix, col)
+            for row in range(col+1, matrix_size):
+                multiple = -1 * (matrix[row][col] / matrix[col][col])
+                matrix[row][col] = 0                    # explicitly assign zero to this element to avoid numerical errors.
+                for k in range(col+1, matrix_size+1):                   # increase the range by 1 to include the load.
+                    matrix[row][k] += multiple * matrix[col][k]
+        # backward substitution
+        answer = [0.0 for x in range(matrix_size)]
+        answer[matrix_size-1] = matrix[matrix_size-1][matrix_size] / matrix[matrix_size-1][matrix_size-1]
+        for i in range(matrix_size-2, -1, -1):
+            sigma = 0.0
+            for j in range(i+1, matrix_size):
+                sigma += matrix[i][j] * answer[j]
+            answer[i] = (matrix[i][-1] - sigma) / matrix[i][i]
+        return answer
+    except Exception as e:
+        if e.__class__ == ZeroDivisionError:
+            print("Inconsistent equation")
 
 
+def matrix_multiplication(a, b):                    # a * b
+    assert len(a[0]) == len(b)
+    result = []
+    row_no = len(a)
+    col_no = len(b[0])
+    inner_loop = len(a[0])
+    for row in range(row_no):
+        result.append([])
+        for col in range(col_no):
+            temp = 0.0
+            for k in range(inner_loop):
+                temp += a[row][k] * b[k][col]
+            result[row].append(temp)
+    return result
+
+
+print(matrix_multiplication([[1,2,3],[4,5,6]], [[7,8],[9,10],[11,12]]))
 print(gaussian_elimination_partial_pivoting(matrices[0]))
