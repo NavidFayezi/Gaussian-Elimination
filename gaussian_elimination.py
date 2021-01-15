@@ -1,25 +1,40 @@
-files = [open("A_1.txt", "r").read().split('\n'),
-         open("A_2.txt", "r").read().split('\n'),
-         open("A_3.txt", "r").read().split('\n')]
+# Ax = b
+# A is the coefficient matrix.
+# x is the unknown vector.
+# b is the load vector.
 
-load_vector = [list(map(float, open("b_1.txt", "r").read().split('\n'))),
-               list(map(float, open("b_2.txt", "r").read().split('\n'))),
-               list(map(float, open("b_3.txt", "r").read().split('\n')))]
 
-matrices = []                   # coefficient matrices will be stored in this 3D array.
-a_coef = []                     # coefficient matrices. this array will not be augmented with load vector.
-for i in range(len(files)):
-    matrices.append([])
-    a_coef.append([])
-    temp = []
-    temp2 = []
-    for j in range(len(files[i])):
-        files[i][j] = [x for x in files[i][j].split(' ') if x != '']
-        temp.append(list(map(float, files[i][j])))
-        temp2.append(temp[j][:])
-        temp[j].append(load_vector[i][j])                   # augment the matrix with load.
-    matrices[i] = temp[:]
-    a_coef[i] = temp2[:]
+def initialize():
+    global answers, b_new, files, load_vector, matrices, a_coef
+    answers = []                # answers to equations.(x vector)
+    b_new = []                  # compare this to the original load vector to calculate numerical error.
+    files = [open("A_1.txt", "r").read().split('\n'),
+             open("A_2.txt", "r").read().split('\n'),
+             open("A_3.txt", "r").read().split('\n')]
+
+    # b vector
+    load_vector = [list(map(float, open("b_1.txt", "r").read().split('\n'))),
+                   list(map(float, open("b_2.txt", "r").read().split('\n'))),
+                   list(map(float, open("b_3.txt", "r").read().split('\n')))]
+
+    matrices = []   # coefficient matrices(A vectors) will be stored in this 3D array. each matrix will be augmented
+                    # with corresponding load vector.
+    a_coef = []     # coefficient matrices(A vectors). this array will not be augmented with load vector.
+
+
+def read_augment_inputs():
+    for i in range(len(files)):
+        matrices.append([])
+        a_coef.append([])
+        temp = []
+        temp2 = []
+        for j in range(len(files[i])):
+            files[i][j] = [x for x in files[i][j].split(' ') if x != '']
+            temp.append(list(map(float, files[i][j])))
+            temp2.append(temp[j][:])
+            temp[j].append(load_vector[i][j])                   # augment the matrix with load vector.
+        matrices[i] = temp[:]
+        a_coef[i] = temp2[:]
 
 
 def partial_pivoting(matrix, col):
@@ -34,13 +49,26 @@ def partial_pivoting(matrix, col):
     matrix[index] = temp
 
 
-def gaussian_elimination_partial_pivoting(matrix):
+def scaled_partial_pivoting(matrix, col):
+    scaling_vector = [abs(max(x, key=abs)) for x in matrix]
+    pivot = abs(matrix[col][col]/scaling_vector[col])
+    index = col
+    for i in range(col, len(matrix)):
+        if abs(matrix[i][col]/scaling_vector[i]) > pivot:
+            index = i
+            pivot = matrix[i][col]/scaling_vector[i]
+    temp = matrix[col]
+    matrix[col] = matrix[index]
+    matrix[index] = temp
+
+
+def gaussian_elimination_partial_pivoting(matrix, pivoting_function):
     assert len(matrix) == (len(matrix[0]) - 1)                  # check the size of augmented matrix.
     try:
         matrix_size = len(matrix)                   # matrix_size == number of rows.
         # forward elimination
         for col in range(matrix_size-1):
-            partial_pivoting(matrix, col)
+            pivoting_function(matrix, col)
             for row in range(col+1, matrix_size):
                 multiple = -1 * (matrix[row][col] / matrix[col][col])
                 matrix[row][col] = 0                    # explicitly assign zero to this element to avoid numerical errors.
@@ -78,6 +106,16 @@ def matrix_multiplication(a, b):                    # a * b
     return result
 
 
-a1_answer = gaussian_elimination_partial_pivoting(matrices[0])
-b1_new = matrix_multiplication(a_coef[0], a1_answer)
-print(b_new)
+if __name__ == "__main__":
+    initialize()
+    read_augment_inputs()
+    for i in range(3):
+        answers.append(gaussian_elimination_partial_pivoting(matrices[i], partial_pivoting))
+        b_new.append(matrix_multiplication(a_coef[i], answers[i]))
+        print(b_new[i])
+    initialize()
+    read_augment_inputs()
+    for i in range(3):
+        answers.append(gaussian_elimination_partial_pivoting(matrices[i], scaled_partial_pivoting))
+        b_new.append(matrix_multiplication(a_coef[i], answers[i]))
+        print(b_new[i])
