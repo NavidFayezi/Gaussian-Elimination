@@ -12,4 +12,16 @@ for i in range(len(files)):
         temp.append(list(map(float, files[i][j])))
     matrices[i] = temp[:]
 
-print(matrices)
+
+def partial_pivoting(matrix, col):
+    pivot = matrix[col][col]
+    index = col
+    for i in range(col, len(matrix)):
+        if matrix[i][col] > pivot:
+            index = i
+            pivot = matrix[i][col]
+    temp = matrix[col]
+    matrix[col] = matrix[index]
+    matrix[index] = temp
+
+
