@@ -7,14 +7,19 @@ load_vector = [list(map(float, open("b_1.txt", "r").read().split('\n'))),
                list(map(float, open("b_3.txt", "r").read().split('\n')))]
 
 matrices = []                   # coefficient matrices will be stored in this 3D array.
+a_coef = []                     # coefficient matrices. this array will not be augmented with load vector.
 for i in range(len(files)):
     matrices.append([])
+    a_coef.append([])
     temp = []
+    temp2 = []
     for j in range(len(files[i])):
         files[i][j] = [x for x in files[i][j].split(' ') if x != '']
         temp.append(list(map(float, files[i][j])))
+        temp2.append(temp[j][:])
         temp[j].append(load_vector[i][j])                   # augment the matrix with load.
     matrices[i] = temp[:]
+    a_coef[i] = temp2[:]
 
 
 def partial_pivoting(matrix, col):
@@ -42,17 +47,19 @@ def gaussian_elimination_partial_pivoting(matrix):
                 for k in range(col+1, matrix_size+1):                   # increase the range by 1 to include the load.
                     matrix[row][k] += multiple * matrix[col][k]
         # backward substitution
-        answer = [0.0 for x in range(matrix_size)]
-        answer[matrix_size-1] = matrix[matrix_size-1][matrix_size] / matrix[matrix_size-1][matrix_size-1]
+        answer = [[0] for x in range(matrix_size)]
+        answer[matrix_size-1] = [(matrix[matrix_size-1][matrix_size] / matrix[matrix_size-1][matrix_size-1])]
         for i in range(matrix_size-2, -1, -1):
             sigma = 0.0
             for j in range(i+1, matrix_size):
-                sigma += matrix[i][j] * answer[j]
-            answer[i] = (matrix[i][-1] - sigma) / matrix[i][i]
+                sigma += matrix[i][j] * answer[j][0]
+            answer[i] = [((matrix[i][-1] - sigma) / matrix[i][i])]
         return answer
     except Exception as e:
         if e.__class__ == ZeroDivisionError:
             print("Inconsistent equation")
+        else:
+            print("something else went wrong. ", e.__str__())
 
 
 def matrix_multiplication(a, b):                    # a * b
@@ -71,5 +78,6 @@ def matrix_multiplication(a, b):                    # a * b
     return result
 
 
-print(matrix_multiplication([[1,2,3],[4,5,6]], [[7,8],[9,10],[11,12]]))
-print(gaussian_elimination_partial_pivoting(matrices[0]))
+a1_answer = gaussian_elimination_partial_pivoting(matrices[0])
+b1_new = matrix_multiplication(a_coef[0], a1_answer)
+print(b_new)
